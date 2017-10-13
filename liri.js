@@ -1,7 +1,7 @@
 var action = process.argv[2];
 var value = process.argv[3];
 var Twitter = require("twitter");
-var keys = require("keys.js");
+var keys = require("./keys.js");
 var client = new Twitter(keys.twitterKeys);
 var params = {
   screen_name: "KillerSentry13",
