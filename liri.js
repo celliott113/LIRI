@@ -104,7 +104,6 @@ function myTweets() {
   var twitterUsername = process.argv[3];
   if (!twitterUsername) {
     twitterUsername = "KillerSentry13";
-    count: 20;
   }
   params = { screen_name: twitterUsername };
   client.get("statuses/user_timeline/", params, function(
