@@ -79,7 +79,7 @@ function myTweets() {
 // spotifyThis function
 function spotifyThis(value) {
   if (value == null) {
-    value = "computer love";
+    value = "Deadpool Rap";
   }
   request(
     "https://api.spotify.com/v1/search?q=" + value + "&type=track",
