@@ -1,191 +1,198 @@
-var action = process.argv[2];
-var value = process.argv[3];
-var Twitter = require("twitter");
-var keys = require("./keys.js");
-var client = new Twitter(keys.twitterKeys);
-var params = {
-  screen_name: "KillerSentry13",
-  count: 20
-};
-var request = require("request");
 var fs = require("fs");
+var request = require("request");
+var keys = require("./keys.js");
+var twitter = require("twitter");
+var spotify = require("spotify");
+var liriArgument = process.argv[2];
 
-switch (action) {
-  case "mytweets":
+switch (liriArgument) {
+  case "my-tweets":
     myTweets();
     break;
-  case "spotify":
-    spotifyThis(value);
+  case "spotify-this-song":
+    spotifyThisSong();
     break;
-  case "omdb":
-    omdbThis(value);
+  case "movie-this":
+    movieThis();
     break;
-  case "random":
-    random();
+  case "do-what-it-says":
+    doWhatItSays();
     break;
+
+  //Just do some shit here!
+  default:
+    console.log(
+      "\r\n" +
+        "Just type some shit you're told to below! 'node liri.js' : " +
+        "\r\n" +
+        "1. my-tweets 'any twitter name' " +
+        "\r\n" +
+        "2. spotify-this-song 'any song name' " +
+        "\r\n" +
+        "3. movie-this 'any movie name' " +
+        "\r\n" +
+        "4. do-what-it-says." +
+        "\r\n" +
+        "If movie is more than 1 word, place in quotes! You know what, fuck it! Just put EVERYTHING in quotes!"
+    );
 }
 
-// my-tweets function
+//Some damn function that pulls movie info from a money grubbing company that steals your dollars for an API key! Jerks!
+function movieThis() {
+  var movie = process.argv[3];
+  if (!movie) {
+    movie = "hackers";
+  }
+  params = movie;
+  request(
+    "http://www.omdbapi.com/?t=" +
+      params +
+      "&y=&plot=short&r=json&tomatoes=true",
+    function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var movieObject = JSON.parse(body);
+        var movieResults =
+          "------------------------------------------------------------" +
+          "\r\n";
+        "Title: " +
+          movieObject.Title +
+          "\r\n" +
+          "Year: " +
+          movieObject.Year +
+          "\r\n" +
+          "Imdb Rating: " +
+          movieObject.imdbRating +
+          "\r\n" +
+          "Country: " +
+          movieObject.Country +
+          "\r\n" +
+          "Language: " +
+          movieObject.Language +
+          "\r\n" +
+          "Plot: " +
+          movieObject.Plot +
+          "\r\n" +
+          "Actors: " +
+          movieObject.Actors +
+          "\r\n" +
+          "Rotten Tomatoes Rating: " +
+          movieObject.tomatoRating +
+          "\r\n" +
+          "Rotten Tomatoes URL: " +
+          movieObject.tomatoURL +
+          "\r\n" +
+          "------------------------------------------------------------" +
+          "\r\n";
+        console.log(movieResults);
+        log(movieResults);
+      } else {
+        console.log("Error :" + error);
+        return;
+      }
+    }
+  );
+}
+
+//A function that let's you play with a little blue pecker!
 function myTweets() {
-  client.get("statuses/user_timeline", params, function(
+  var client = new twitter({
+    consumer_key: keys.twitterKeys.consumer_key,
+    consumer_secret: keys.twitterKeys.consumer_secret,
+    access_token_key: keys.twitterKeys.access_token_key,
+    access_token_secret: keys.twitterKeys.access_token_secret
+  });
+  var twitterUsername = process.argv[3];
+  if (!twitterUsername) {
+    twitterUsername = "KillerSentry13";
+    count: 20;
+  }
+  params = { screen_name: twitterUsername };
+  client.get("statuses/user_timeline/", params, function(
     error,
-    tweets,
+    data,
     response
   ) {
-    if (!error && response.statusCode == 200) {
-      fs.appendFile(
-        "terminal.log",
-        "=============== LOG ENTRY BEGIN ===============\r\n" +
-          Date() +
-          "\r\n \r\nTERMINAL COMMANDS:\r\n$: " +
-          process.argv +
-          "\r\n \r\nDATA OUTPUT:\r\n",
-        function(err) {
-          if (err) throw err;
-        }
-      );
-      console.log(" ");
-      console.log("Last 20 Tweets:");
-      for (i = 0; i < tweets.length; i++) {
-        var number = i + 1;
-        console.log(" ");
-        console.log([i + 1] + ". " + tweets[i].text);
-        console.log("Created on: " + tweets[i].created_at);
-        console.log(" ");
-        fs.appendFile(
-          "terminal.log",
-          number +
-            ". Tweet: " +
-            tweets[i].text +
-            "\r\nCreated at: " +
-            tweets[i].created_at +
-            " \r\n",
-          function(err) {
-            if (err) throw err;
-          }
-        );
+    if (!error) {
+      for (var i = 0; i < data.length; i++) {
+        var twitterResults =
+          "@" +
+          data[i].user.screen_name +
+          ": " +
+          data[i].text +
+          "\r\n" +
+          data[i].created_at +
+          "\r\n" +
+          "------------------------------ " +
+          i +
+          " ------------------------------" +
+          "\r\n";
+        console.log(twitterResults);
+        log(twitterResults);
       }
-      fs.appendFile(
-        "terminal.log",
-        "=============== LOG ENTRY END ===============\r\n \r\n",
-        function(err) {
-          if (err) throw err;
-        }
-      );
-    }
-  });
-} // end myTweets function
-
-// spotifyThis function
-function spotifyThis(value) {
-  if (value == null) {
-    value = "Deadpool Rap";
-  }
-  request(
-    "https://api.spotify.com/v1/search?q=" + value + "&type=track",
-    function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        jsonBody = JSON.parse(body);
-        console.log(" ");
-        console.log("Artist: " + jsonBody.tracks.items[0].artists[0].name);
-        console.log("Song: " + jsonBody.tracks.items[0].name);
-        console.log("Preview Link: " + jsonBody.tracks.items[0].preview_url);
-        console.log("Album: " + jsonBody.tracks.items[0].album.name);
-        console.log(" ");
-        fs.appendFile(
-          "terminal.log",
-          "=============== LOG ENTRY BEGIN ===============\r\n" +
-            Date() +
-            "\r\n \r\nTERMINAL COMMANDS:\r\n$: " +
-            process.argv +
-            "\r\n \r\nDATA OUTPUT:\r\n" +
-            "Artist: " +
-            jsonBody.tracks.items[0].artists[0].name +
-            "\r\nSong: " +
-            jsonBody.tracks.items[0].name +
-            "\r\nPreview Link: " +
-            jsonBody.tracks.items[0].preview_url +
-            "\r\nAlbum: " +
-            jsonBody.tracks.items[0].album.name +
-            "\r\n=============== LOG ENTRY END ===============\r\n \r\n",
-          function(err) {
-            if (err) throw err;
-          }
-        );
-      }
-    }
-  );
-} // end spotifyThis function
-
-// omdbThis function
-function omdbThis(value) {
-  if (value == null) {
-    value = "wargames";
-  }
-  request(
-    "http://www.omdbapi.com/?t=" + value + "&tomatoes=true&r=json",
-    function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        jsonBody = JSON.parse(body);
-        console.log(" ");
-        console.log("Title: " + jsonBody.Title);
-        console.log("Year: " + jsonBody.Year);
-        console.log("IMDb Rating: " + jsonBody.imdbRating);
-        console.log("Country: " + jsonBody.Country);
-        console.log("Language: " + jsonBody.Language);
-        console.log("Plot: " + jsonBody.Plot);
-        console.log("Actors: " + jsonBody.Actors);
-        console.log("Rotten Tomatoes Rating: " + jsonBody.tomatoRating);
-        console.log("Rotten Tomatoes URL: " + jsonBody.tomatoURL);
-        console.log(" ");
-        fs.appendFile(
-          "log.txt",
-          "=============== LOG ENTRY BEGIN ===============\r\n" +
-            Date() +
-            "\r\n \r\nTERMINAL COMMANDS: " +
-            process.argv +
-            "\r\nDATA OUTPUT:\r\n" +
-            "Title: " +
-            jsonBody.Title +
-            "\r\nYear: " +
-            jsonBody.Year +
-            "\r\nIMDb Rating: " +
-            jsonBody.imdbRating +
-            "\r\nCountry: " +
-            jsonBody.Country +
-            "\r\nLanguage: " +
-            jsonBody.Language +
-            "\r\nPlot: " +
-            jsonBody.Plot +
-            "\r\nActors: " +
-            jsonBody.Actors +
-            "\r\nRotten Tomatoes Rating: " +
-            jsonBody.tomatoRating +
-            "\r\nRotten Tomatoes URL: " +
-            jsonBody.tomatoURL +
-            "\r\n =============== LOG ENTRY END ===============\r\n \r\n",
-          function(err) {
-            if (err) throw err;
-          }
-        );
-      }
-    }
-  );
-} //end omdbThis function
-
-// random function
-function random() {
-  fs.readFile("random.txt", "utf8", function(error, data) {
-    if (error) {
-      console.log(error);
     } else {
-      var dataArr = data.split(",");
-      if (dataArr[0] === "spotify") {
-        spotifyThis(dataArr[1]);
-      }
-      if (dataArr[0] === "omdb") {
-        omdbThis(dataArr[1]);
-      }
+      console.log("Error :" + error);
+      return;
     }
   });
-} // end doWhatItSays function
+}
+
+//Go listen to some damn tunes and leave me alone!
+function spotifyThisSong(songName) {
+  var songName = process.argv[3];
+  if (!songName) {
+    songName = "Deadpool Rap";
+  }
+  params = songName;
+  spotify.search({ type: "track", query: params }, function(err, data) {
+    if (!err) {
+      var songInfo = data.tracks.items;
+      for (var i = 0; i < 5; i++) {
+        if (songInfo[i] != undefined) {
+          var spotifyResults =
+            "Artist: " +
+            songInfo[i].artists[0].name +
+            "\r\n" +
+            "Song: " +
+            songInfo[i].name +
+            "\r\n" +
+            "Album the song is from: " +
+            songInfo[i].album.name +
+            "\r\n" +
+            "Preview Url: " +
+            songInfo[i].preview_url +
+            "\r\n" +
+            "------------------------------ " +
+            i +
+            " ------------------------------" +
+            "\r\n";
+          console.log(spotifyResults);
+          log(spotifyResults);
+        }
+      }
+    } else {
+      console.log("Error :" + err);
+      return;
+    }
+  });
+}
+
+//You don't do what it says, you're gonna get an error. Don't come cryin' to me about it!
+function doWhatItSays() {
+  fs.readFile("random.txt", "utf8", function(error, data) {
+    if (!error) {
+      doWhatItSaysResults = data.split(",");
+      spotifyThisSong(doWhatItSaysResults[0], doWhatItSaysResults[1]);
+    } else {
+      console.log("Error occurred" + error);
+    }
+  });
+}
+
+//Yeah that's right, we're recording your inputs! Deal with it!
+function log(logResults) {
+  fs.appendFile("log.txt", logResults, error => {
+    if (error) {
+      throw error;
+    }
+  });
+}
